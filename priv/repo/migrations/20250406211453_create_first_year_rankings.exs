@@ -20,8 +20,13 @@ defmodule Sevensageassignment.Repo.Migrations.CreateFirstYearRankings do
       add :gre25q, :integer
       add :gre75w, :decimal
       add :gre50w, :decimal
+      add :gre25w, :decimal
 
       timestamps(type: :utc_datetime)
     end
+
+    create index(:first_year_rankings, [:school])
+    create index(:first_year_rankings, [:rank])
+    create index(:first_year_rankings, [:first_year_class])
   end
 end

@@ -20,6 +20,7 @@ defmodule Sevensageassignment.FirstYearRankings.FirstYearRanking do
     field :gre25q, :integer
     field :gre75w, :decimal
     field :gre50w, :decimal
+    field :gre25w, :decimal
 
     timestamps(type: :utc_datetime)
   end
@@ -27,7 +28,7 @@ defmodule Sevensageassignment.FirstYearRankings.FirstYearRanking do
   @doc false
   def changeset(first_year_ranking, attrs) do
     first_year_ranking
-    |> cast(attrs, [:rank, :school, :first_year_class, :l75, :l50, :l25, :g75, :g50, :g25, :gre75v, :gre50v, :gre25v, :gre75q, :gre50q, :gre25q, :gre75w, :gre50w])
-    |> validate_required([:rank, :school, :first_year_class, :l75, :l50, :l25, :g75, :g50, :g25, :gre75v, :gre50v, :gre25v, :gre75q, :gre50q, :gre25q, :gre75w, :gre50w])
+    |> cast(attrs, [:rank, :school, :first_year_class, :l75, :l50, :l25, :g75, :g50, :g25, :gre75v, :gre50v, :gre25v, :gre75q, :gre50q, :gre25q, :gre75w, :gre50w, :gre25w])
+    |> validate_required([:rank, :school, :first_year_class])
   end
 end
