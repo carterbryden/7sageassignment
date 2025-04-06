@@ -17,7 +17,7 @@ defmodule SevensageassignmentWeb.Router do
   scope "/", SevensageassignmentWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", FirstYearRankingsLive
   end
 
   # Other scopes may use custom stacks.

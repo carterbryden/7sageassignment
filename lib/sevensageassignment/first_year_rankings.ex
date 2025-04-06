@@ -129,4 +129,24 @@ defmodule Sevensageassignment.FirstYearRankings do
   def import_from_csv(file_path) do
     Importer.import_from_csv(file_path)
   end
+
+  @doc """
+  Searches for distinct school names using a case-insensitive LIKE query.
+  Returns a list of matching school names, ordered alphabetically.
+  Limits results to 10 by default.
+  """
+  def search_schools(term, limit \\ 10) do
+    # Prepare for ilike search with a wildcard on each side
+    # to match the substring anywhere in the school name.
+    like_term = "%" <> String.downcase(term) <> "%"
+
+    FirstYearRanking
+    # SQLite compatible ilike equivalent, simple but maybe slow on really large data sets
+    |> where([r], fragment("lower(?) LIKE ?", r.school, ^like_term))
+    # Order the results by school, then year
+    |> order_by([asc: :school, asc: :first_year_class])
+    # If it's not in the first 10, it probably needs a more specific search term anyways
+    |> limit(^limit)
+    |> Repo.all()
+  end
 end
