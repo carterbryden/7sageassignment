@@ -1,0 +1,17 @@
+{
+  "name": "Elixir Dev Environment",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "waitFor": "onCreateCommand",
+  "updateContentCommand": "mix deps.get && mix compile",
+  "postCreateCommand": "iex -S mix phx.server",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "jakebecker.elixir-ls"
+      ]
+    }
+  }
+}
