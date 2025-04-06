@@ -1,0 +1,15 @@
+image:
+  file: .devcontainer/Dockerfile
+
+tasks:
+  - name: Setup Elixir App
+    init: |
+      # This runs during prebuild
+      mix deps.get
+      mix compile
+    command: |
+      iex -S mix phx.server
+
+vscode:
+  extensions:
+    - elixir-lsp.elixir-ls
