@@ -7,6 +7,7 @@ defmodule Sevensageassignment.FirstYearRankings do
   alias Sevensageassignment.Repo
 
   alias Sevensageassignment.FirstYearRankings.FirstYearRanking
+  alias Sevensageassignment.FirstYearRankings.Importer
 
   @doc """
   Returns the list of first_year_rankings.
@@ -100,5 +101,32 @@ defmodule Sevensageassignment.FirstYearRankings do
   """
   def change_first_year_ranking(%FirstYearRanking{} = first_year_ranking, attrs \\ %{}) do
     FirstYearRanking.changeset(first_year_ranking, attrs)
+  end
+
+  @doc """
+  Imports law school rankings data from a CSV file into the database.
+
+  ## Parameters
+
+    * `file_path` - The path to the CSV file containing the rankings data.
+      Expected column order: rank, school, first_year_class, l75, l50, l25,
+      g75, g50, g25, gre75v, gre50v, gre25v, gre75q, gre50q, gre25q,
+      gre75w, gre50w, gre25w
+
+  ## Examples
+
+      iex> Sevensageassignment.FirstYearRankings.import_from_csv("priv/repo/7sage-test-data.csv")
+      :ok
+
+  ## Details
+
+  - Skips the header row of the CSV file
+  - Converts empty strings to `nil` values
+  - Processes data in batches of 100 for improved performance
+  - Uses `on_conflict: :nothing` to skip records that would violate unique constraints,
+    allowing the script to be run multiple times without creating duplicates
+  """
+  def import_from_csv(file_path) do
+    Importer.import_from_csv(file_path)
   end
 end
