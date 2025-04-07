@@ -5,13 +5,11 @@
     "context": ".."
   },
   "waitFor": "onCreateCommand",
-  "updateContentCommand": "mix deps.get && mix compile",
+  "updateContentCommand": "mix deps.get && mix compile && npm install --prefix assets",
   "postCreateCommand": "iex -S mix phx.server",
   "customizations": {
     "vscode": {
-      "extensions": [
-        "jakebecker.elixir-ls"
-      ]
+      "extensions": ["jakebecker.elixir-ls"]
     }
   }
 }
