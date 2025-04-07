@@ -123,8 +123,6 @@ defmodule Sevensageassignment.FirstYearRankings do
   - Skips the header row of the CSV file
   - Converts empty strings to `nil` values
   - Processes data in batches of 100 for improved performance
-  - Uses `on_conflict: :nothing` to skip records that would violate unique constraints,
-    allowing the script to be run multiple times without creating duplicates
   """
   def import_from_csv(file_path) do
     Importer.import_from_csv(file_path)
@@ -132,21 +130,44 @@ defmodule Sevensageassignment.FirstYearRankings do
 
   @doc """
   Searches for distinct school names using a case-insensitive LIKE query.
-  Returns a list of matching school names, ordered alphabetically.
+  Returns a list of distinct matching school names, ordered alphabetically.
   Limits results to 10 by default.
   """
   def search_schools(term, limit \\ 10) do
-    # Prepare for ilike search with a wildcard on each side
-    # to match the substring anywhere in the school name.
     like_term = "%" <> String.downcase(term) <> "%"
 
     FirstYearRanking
-    # SQLite compatible ilike equivalent, simple but maybe slow on really large data sets
     |> where([r], fragment("lower(?) LIKE ?", r.school, ^like_term))
-    # Order the results by school, then year
-    |> order_by([asc: :school, asc: :first_year_class])
-    # If it's not in the first 10, it probably needs a more specific search term anyways
+    |> select([r], r.school) # Select only the school name
+    |> distinct(true)        # Get unique names
+    |> order_by([asc: :school]) # Order by name
     |> limit(^limit)
+    |> Repo.all() # Returns a list of school name strings
+  end
+
+  @doc """
+  Retrieves all FirstYearRanking records for a specific school,
+  ordered by year (first_year_class ascending).
+  """
+  def get_rankings_by_school(school_name) when is_binary(school_name) do
+    FirstYearRanking
+    |> where([r], r.school == ^school_name)
+    |> order_by([asc: :first_year_class])
     |> Repo.all()
   end
+  def get_rankings_by_school(_), do: []
+
+  @doc """
+  Retrieves the most recent FirstYearRanking record for a specific school.
+  Returns nil if the school has no records.
+  """
+  def get_latest_ranking_by_school(school_name) when is_binary(school_name) do
+    FirstYearRanking
+    |> where([r], r.school == ^school_name)
+    |> order_by([desc: :first_year_class]) # Order by year descending
+    |> limit(1)                            # Get only the latest one
+    |> Repo.one()                          # Fetch a single record or nil
+  end
+  def get_latest_ranking_by_school(_), do: nil
+
 end
