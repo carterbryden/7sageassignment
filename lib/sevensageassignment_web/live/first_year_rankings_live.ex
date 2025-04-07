@@ -10,9 +10,9 @@ defmodule SevensageassignmentWeb.FirstYearRankingsLive do
         search_results: [],
         selected_school_name: nil,
         selected_ranking_data: nil, # Latest year data
-        show_trend_chart: false,    # Flag for LSAT/GPA chart
-        show_rank_chart: false,     # Flag for Rank chart
-        show_gre_chart: false,      # Flag for GRE chart
+        show_trend_chart: false,
+        show_rank_chart: false,
+        show_gre_chart: false,
         search_active: false
       )
     {:ok, socket}
@@ -66,124 +66,13 @@ defmodule SevensageassignmentWeb.FirstYearRankingsLive do
       )
 
      # Push separate events for each chart
-     socket = push_event(socket, "update_trend_chart", %{data: trend_chart_json})
-     socket = push_event(socket, "update_rank_chart", %{data: rank_chart_json})
-     socket = push_event(socket, "update_gre_chart", %{data: gre_chart_json})
+     socket =
+      socket
+      |> push_event("update_trend_chart", %{data: trend_chart_json})
+      |> push_event("update_rank_chart", %{data: rank_chart_json})
+      |> push_event("update_gre_chart", %{data: gre_chart_json})
 
      {:noreply, socket}
-  end
-
-
-  @impl true
-  def render(assigns) do
-    ~H"""
-    <div class="max-w-4xl mx-auto p-6 bg-gray-50 rounded-lg shadow-md min-h-[100vh] space-y-6">
-      <h1 class="text-2xl font-bold text-gray-800 mb-4">Law School First Year Class Data</h1>
-
-      <div class="relative mb-6">
-        <label for="school_search" class="block text-sm font-medium text-gray-700 mb-1">Search for School</label>
-        <.input id="school_search" type="text" name="query" value={@query} phx-keyup="search_school" phx-debounce="300" autocomplete="off" placeholder="e.g. Harvard" class="w-full"/>
-        <.error :if={@search_active && @search_results == [] && is_nil(@selected_school_name)}> No matching schools found for "<%= @query %>". </.error>
-        <div :if={@search_results != []} class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-          <ul> <li :for={school_name <- @search_results} class="text-gray-900 cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-sky-600 hover:text-white" phx-click="select_school" phx-value-name={school_name} phx-key={school_name}> <%= school_name %> </li> </ul>
-        </div>
-      </div>
-
-      <div :if={@selected_ranking_data} class="mt-6 space-y-6 p-4 border border-gray-200 rounded-lg bg-white">
-        <h2 class="text-xl font-semibold text-sky-700"> <%= @selected_ranking_data.school %> - <%= @selected_ranking_data.first_year_class %> Data (Latest Available) </h2>
-        <div> <p class="text-gray-700 text-lg"> For the <%= @selected_ranking_data.first_year_class %> entering class at <%= @selected_ranking_data.school %>, the median LSAT score was <%= display_data(@selected_ranking_data.l50) %> and the median GPA was <%= display_data(@selected_ranking_data.g50) %>. </p> </div>
-        <div class="overflow-x-auto"> <.data_table data={@selected_ranking_data} /> </div>
-
-        <div class="mt-8 border-t pt-6">
-           <h3 class="text-lg font-medium text-gray-800 mb-2">Median LSAT & GPA Trends</h3>
-           <div :if={@show_trend_chart} id="trend-chart-wrapper" class="bg-gray-100 p-4 rounded relative h-72 md:h-96">
-              <canvas id="trendChart" phx-update="ignore" phx-hook="TrendChart"></canvas>
-           </div>
-           <p :if={!@show_trend_chart} class="text-gray-500 text-sm mt-2"> Not enough historical data for LSAT/GPA trends. </p>
-        </div>
-
-        <div class="mt-8 border-t pt-6">
-           <h3 class="text-lg font-medium text-gray-800 mb-2">Rank History</h3>
-           <div :if={@show_rank_chart} id="rank-chart-wrapper" class="bg-gray-100 p-4 rounded relative h-60 md:h-96">
-              <canvas id="rankChart" phx-update="ignore" phx-hook="RankChart"></canvas>
-           </div>
-           <div :if={@show_rank_chart} class="mt-1 text-gray-500 text-sm">Note: ranks lower than 146 are not tracked and will all be displayed as rank 147.</div>
-           <p :if={!@show_rank_chart} class="text-gray-500 text-sm mt-2"> Not enough historical data for rank trend. </p>
-        </div>
-
-        <div class="mt-8 border-t pt-6">
-           <h3 class="text-lg font-medium text-gray-800 mb-2">GRE Score Trends (25th/50th/75th)</h3>
-           <div :if={@show_gre_chart} id="gre-chart-wrapper" class="bg-gray-100 p-4 rounded relative h-72 md:h-96">
-              <canvas id="greChart" phx-update="ignore" phx-hook="GreChart"></canvas>
-           </div>
-           <p :if={!@show_gre_chart} class="text-gray-500 text-sm mt-2"> No historical GRE data found or not enough points to display trends. </p>
-        </div>
-      </div>
-
-       <div :if={@selected_school_name && is_nil(@selected_ranking_data)} class="text-center text-gray-500 mt-6"> No ranking data found for <%= @selected_school_name %>. </div>
-       <div :if={is_nil(@selected_school_name) && !@search_active && @query == ""} class="text-gray-500 mt-6"> Please search for and select a school to view its data. </div>
-    </div>
-    """
-  end
-
-  defp data_table(assigns) do
-    ~H"""
-    <div class="grid lg:grid-cols-2 lg:gap-4">
-      <div>
-        <div class="grid sm:grid-cols-4 gap-4 text-sm mb-4">
-          <div class="font-semibold text-gray-800 col-span-full sm:col-span-1">LSAT</div>
-          <div class="sm:col-span-3 grid grid-cols-3 gap-4 text-gray-800">
-            <div><span class="font-medium text-gray-600">25th:</span> <%= display_data(@data.l25) %></div>
-            <div><span class="font-medium text-gray-600">50th:</span> <%= display_data(@data.l50) %></div>
-            <div><span class="font-medium text-gray-600">75th:</span> <%= display_data(@data.l75) %></div>
-          </div>
-        </div>
-
-        <div class="grid sm:grid-cols-4 gap-4 text-sm mb-4">
-          <div class="font-semibold text-gray-800 col-span-full sm:col-span-1 mt-2 sm:mt-0">GPA</div>
-          <div class="sm:col-span-3 grid grid-cols-3 gap-4 text-gray-800">
-            <div><span class="font-medium text-gray-600">25th:</span> <%= display_data(@data.g25) %></div>
-            <div><span class="font-medium text-gray-600">50th:</span> <%= display_data(@data.g50) %></div>
-            <div><span class="font-medium text-gray-600">75th:</span> <%= display_data(@data.g75) %></div>
-          </div>
-        </div>
-      </div>
-      <div>
-        <%= if has_gre_data?(@data, :v) do %>
-          <div class="grid sm:grid-cols-4 gap-4 text-sm mb-4">
-            <div class="font-semibold text-gray-800 col-span-full sm:col-span-1 mt-2 sm:mt-0">GRE Verbal</div>
-            <div class="sm:col-span-3 grid grid-cols-3 gap-4 text-gray-800">
-              <div><span class="font-medium text-gray-600">25th:</span> <%= display_data(@data.gre25v) %></div>
-              <div><span class="font-medium text-gray-600">50th:</span> <%= display_data(@data.gre50v) %></div>
-              <div><span class="font-medium text-gray-600">75th:</span> <%= display_data(@data.gre75v) %></div>
-            </div>
-          </div>
-        <% end %>
-
-        <%= if has_gre_data?(@data, :q) do %>
-          <div class="grid sm:grid-cols-4 gap-4 text-sm mb-4">
-            <div class="font-semibold text-gray-800 col-span-full sm:col-span-1 mt-2 sm:mt-0">GRE Quant</div>
-            <div class="sm:col-span-3 grid grid-cols-3 gap-4 text-gray-800">
-              <div><span class="font-medium text-gray-600">25th:</span> <%= display_data(@data.gre25q) %></div>
-              <div><span class="font-medium text-gray-600">50th:</span> <%= display_data(@data.gre50q) %></div>
-              <div><span class="font-medium text-gray-600">75th:</span> <%= display_data(@data.gre75q) %></div>
-            </div>
-          </div>
-        <% end %>
-
-        <%= if has_gre_data?(@data, :w) do %>
-          <div class="grid sm:grid-cols-4 gap-4 text-sm mb-4">
-            <div class="font-semibold text-gray-800 col-span-full sm:col-span-1 mt-2 sm:mt-0">GRE Writing</div>
-            <div class="sm:col-span-3 grid grid-cols-3 gap-4 text-gray-800">
-              <div><span class="font-medium text-gray-600">25th:</span> <%= display_data(@data.gre25w) %></div>
-              <div><span class="font-medium text-gray-600">50th:</span> <%= display_data(@data.gre50w) %></div>
-              <div><span class="font-medium text-gray-600">75th:</span> <%= display_data(@data.gre75w) %></div>
-            </div>
-          </div>
-        <% end %>
-      </div>
-    </div>
-    """
   end
 
   defp error(assigns) do
@@ -191,27 +80,6 @@ defmodule SevensageassignmentWeb.FirstYearRankingsLive do
      <p :if={Map.get(assigns, :if, true)} class="mt-1 text-sm text-red-600"><%= render_slot(@inner_block) %></p>
      """
    end
-
-  defp display_data(nil), do: "N/A"
-  defp display_data(""), do: "N/A"
-  defp display_data(%Decimal{} = value) do
-    precision = if Decimal.compare(value, Decimal.new(10)) == :lt, do: 2, else: 1
-    Decimal.round(value, precision) |> Decimal.to_string()
-  rescue
-    _ -> "N/A"
-  end
-  defp display_data(value) when is_float(value), do: Float.round(value, 2)
-  defp display_data(value), do: value
-
-  defp has_gre_data?(data, category) when category in [:v, :q, :w] do
-    prefix = "gre"
-    suffixes = ["25", "50", "75"]
-    keys = Enum.map(suffixes, &String.to_atom("#{prefix}#{&1}#{category}"))
-    Enum.any?(keys, fn key ->
-      val = Map.get(data, key)
-      !(is_nil(val) || val == "")
-    end)
-  end
 
   defp prepare_trend_chart_data(trend_data) do
     years = Enum.map(trend_data, &to_string(&1.first_year_class))
@@ -273,6 +141,27 @@ defmodule SevensageassignmentWeb.FirstYearRankingsLive do
     else
       nil # Not enough valid median GRE data to plot
     end
+  end
+
+  defp display_data(nil), do: "N/A"
+  defp display_data(""), do: "N/A"
+  defp display_data(%Decimal{} = value) do
+    precision = if Decimal.compare(value, Decimal.new(10)) == :lt, do: 2, else: 1
+    Decimal.round(value, precision) |> Decimal.to_string()
+  rescue
+    _ -> "N/A"
+  end
+  defp display_data(value) when is_float(value), do: Float.round(value, 2)
+  defp display_data(value), do: value
+
+  defp has_gre_data?(data, category) when category in [:v, :q, :w] do
+    prefix = "gre"
+    suffixes = ["25", "50", "75"]
+    keys = Enum.map(suffixes, &String.to_atom("#{prefix}#{&1}#{category}"))
+    Enum.any?(keys, fn key ->
+      val = Map.get(data, key)
+      !(is_nil(val) || val == "")
+    end)
   end
 
   defp ensure_numeric_or_null(val) when is_integer(val), do: val
