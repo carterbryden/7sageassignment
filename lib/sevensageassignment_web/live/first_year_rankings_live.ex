@@ -194,6 +194,7 @@ defmodule SevensageassignmentWeb.FirstYearRankingsLive do
     end
   end
 
+  # Helper functions to make displaying nicely a little easier
   defp display_data(nil), do: "N/A"
   defp display_data(""), do: "N/A"
 
@@ -218,6 +219,7 @@ defmodule SevensageassignmentWeb.FirstYearRankingsLive do
     end)
   end
 
+  # Helper functions to ensure the right types/format for charting
   defp ensure_numeric_or_null(val) when is_integer(val), do: val
   defp ensure_numeric_or_null(%Decimal{} = val), do: val
   defp ensure_numeric_or_null(_), do: nil
