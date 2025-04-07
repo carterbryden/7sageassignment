@@ -1,4 +1,4 @@
-<div class="max-w-4xl mx-auto p-6 bg-base-200 rounded-lg border border-base-300 shadow min-h-[80vh] my-[3vh] space-y-6">
+<div class="max-w-3xl mx-auto p-6 bg-base-200 rounded-lg border border-base-300 shadow min-h-[80vh] mt-[3vh] mb-[10vh] space-y-6">
   <h1 class="text-2xl font-bold mb-4">Law School First Year Class Data</h1>
 
   <div class="relative mb-6">
@@ -51,7 +51,7 @@
         )} and the median GPA was {display_data(@selected_ranking_data.g50)}.
       </p>
     </div>
-    <div class="text-lg font-bold mb-4 ">
+    <div class="text-lg font-bold mb-4 text-pretty">
       LSAT, GPA, and GRE percentiles for {@selected_ranking_data.first_year_class}:
     </div>
     <div class="overflow-x-auto">
@@ -189,7 +189,7 @@
       >
         <canvas id="trendChart" phx-update="ignore" phx-hook="TrendChart"></canvas>
       </div>
-      <p :if={!@show_trend_chart} class="text-neutral-content text-sm mt-2">
+      <p :if={!@show_trend_chart} class="opacity-80 text-sm mt-2">
         Not enough historical data for LSAT/GPA trends.
       </p>
     </div>
@@ -203,10 +203,10 @@
       >
         <canvas id="rankChart" phx-update="ignore" phx-hook="RankChart"></canvas>
       </div>
-      <div :if={@show_rank_chart} class="mt-1 text-neutral-content text-sm">
+      <div :if={@show_rank_chart} class="mt-1 opacity-80 text-sm">
         Note: ranks lower than 146 are not tracked and will all be displayed as rank 147.
       </div>
-      <p :if={!@show_rank_chart} class="text-neutral-content text-sm mt-2">
+      <p :if={!@show_rank_chart} class="opacity-80 text-sm mt-2">
         Not enough historical data for rank trend.
       </p>
     </div>
@@ -220,7 +220,7 @@
       >
         <canvas id="greChart" phx-update="ignore" phx-hook="GreChart"></canvas>
       </div>
-      <p :if={!@show_gre_chart} class="text-neutral-content text-sm mt-2">
+      <p :if={!@show_gre_chart} class="opacity-80 text-sm mt-2">
         No historical GRE data found or not enough points to display trends.
       </p>
     </div>
@@ -228,13 +228,13 @@
 
   <div
     :if={@selected_school_name && is_nil(@selected_ranking_data)}
-    class="text-center text-neutral-content mt-6"
+    class="text-center opacity-80 mt-6"
   >
     No ranking data found for {@selected_school_name}.
   </div>
   <div
     :if={is_nil(@selected_school_name) && !@search_active && @query == ""}
-    class="text-neutral-content mt-6"
+    class="opacity-80 mt-6"
   >
     Please search for and select a school to view its data.
   </div>
