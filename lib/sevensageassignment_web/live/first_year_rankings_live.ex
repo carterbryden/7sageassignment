@@ -77,8 +77,8 @@ defmodule SevensageassignmentWeb.FirstYearRankingsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-4xl mx-auto p-6 bg-gray-50 rounded-lg shadow-md space-y-6">
-      <h1 class="text-2xl font-bold text-center text-gray-800 mb-4">Law School First Year Class Data</h1>
+    <div class="max-w-4xl mx-auto p-6 bg-gray-50 rounded-lg shadow-md min-h-[100vh] space-y-6">
+      <h1 class="text-2xl font-bold text-gray-800 mb-4">Law School First Year Class Data</h1>
 
       <div class="relative mb-6">
         <label for="school_search" class="block text-sm font-medium text-gray-700 mb-1">Search for School</label>
@@ -121,7 +121,7 @@ defmodule SevensageassignmentWeb.FirstYearRankingsLive do
       </div>
 
        <div :if={@selected_school_name && is_nil(@selected_ranking_data)} class="text-center text-gray-500 mt-6"> No ranking data found for <%= @selected_school_name %>. </div>
-       <div :if={is_nil(@selected_school_name) && !@search_active && @query == ""} class="text-center text-gray-500 mt-6"> Please search for and select a school to view its data. </div>
+       <div :if={is_nil(@selected_school_name) && !@search_active && @query == ""} class="text-gray-500 mt-6"> Please search for and select a school to view its data. </div>
     </div>
     """
   end
@@ -245,31 +245,44 @@ defmodule SevensageassignmentWeb.FirstYearRankingsLive do
 
   defp prepare_gre_chart_data(trend_data) do
     years = Enum.map(trend_data, &to_string(&1.first_year_class))
-    gre_fields = [
-      {:gre25v, "V25", "rgb(255, 159, 64)"}, {:gre50v, "V50", "rgb(255, 99, 132)"}, {:gre75v, "V75", "rgb(200, 70, 100)"},
-      {:gre25q, "Q25", "rgb(153, 102, 255)"}, {:gre50q, "Q50", "rgb(75, 0, 130)"}, {:gre75q, "Q75", "rgb(50, 0, 100)"},
-      {:gre25w, "W25", "rgb(201, 203, 207)"}, {:gre50w, "W50", "rgb(54, 162, 235)"}, {:gre75w, "W75", "rgb(0, 100, 200)"}
+
+    gre_median_fields = [
+      {:gre50v, "Median V", "rgb(255, 99, 132)"},
+      {:gre50q, "Median Q", "rgb(75, 0, 130)"},
+      {:gre50w, "Median W", "rgb(54, 162, 235)"}
     ]
+
     datasets =
-      Enum.map(gre_fields, fn {field_key, label, color} ->
+      Enum.map(gre_median_fields, fn {field_key, label, color} ->
+        # Extract data points for the specific median field
         data_points = Enum.map(trend_data, &(Map.get(&1, field_key) |> ensure_numeric_or_null() |> decimal_to_float_or_nil()))
-        y_axis = if String.starts_with?(label, "W"), do: "yGreW", else: "yGreVQ"
+        # Assign appropriate Y-axis based on the type (Writing vs V/Q)
+        y_axis = if String.ends_with?(label, "W"), do: "yGreW", else: "yGreVQ"
+        # Create the dataset map
         %{ label: label, data: data_points, borderColor: color, backgroundColor: "#{String.replace(color, ")", ", 0.2)")}", tension: 0.1, yAxisID: y_axis, pointRadius: 3 }
       end)
-    has_any_gre_data = Enum.any?(datasets, fn ds -> Enum.any?(ds.data, &(!is_nil(&1))) end)
+
+    # Check if any median GRE data point exists across the 3 datasets
+    has_any_median_gre_data = Enum.any?(datasets, fn ds -> Enum.any?(ds.data, &(!is_nil(&1))) end)
+    # Check if at least one median dataset has enough points to draw a line
     has_enough_points = Enum.any?(datasets, fn ds -> Enum.count(ds.data, &(!is_nil(&1))) >= 2 end)
 
-    if has_any_gre_data && has_enough_points do
+    # Return data only if there's some data and at least one line can be drawn
+    if has_any_median_gre_data && has_enough_points do
       %{ labels: years, datasets: datasets }
-    else nil end
+    else
+      nil # Not enough valid median GRE data to plot
+    end
   end
 
   defp ensure_numeric_or_null(val) when is_integer(val), do: val
   defp ensure_numeric_or_null(%Decimal{} = val), do: val
   defp ensure_numeric_or_null(_), do: nil
+
   defp decimal_to_float_or_nil(%Decimal{} = dec), do: Decimal.to_float(dec)
   defp decimal_to_float_or_nil(int) when is_integer(int), do: int
   defp decimal_to_float_or_nil(_), do: nil
+
   defp rank_to_numeric(rank) when is_integer(rank), do: rank
   defp rank_to_numeric(rank_str) when is_binary(rank_str) do
     case Integer.parse(rank_str) do
