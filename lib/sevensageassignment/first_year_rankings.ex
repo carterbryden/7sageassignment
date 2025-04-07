@@ -138,11 +138,15 @@ defmodule Sevensageassignment.FirstYearRankings do
 
     FirstYearRanking
     |> where([r], fragment("lower(?) LIKE ?", r.school, ^like_term))
-    |> select([r], r.school) # Select only the school name
-    |> distinct(true)        # Get unique names
-    |> order_by([asc: :school]) # Order by name
+    # Select only the school name
+    |> select([r], r.school)
+    # Get unique names
+    |> distinct(true)
+    # Order by name
+    |> order_by(asc: :school)
     |> limit(^limit)
-    |> Repo.all() # Returns a list of school name strings
+    # Returns a list of school name strings
+    |> Repo.all()
   end
 
   @doc """
@@ -152,9 +156,10 @@ defmodule Sevensageassignment.FirstYearRankings do
   def get_rankings_by_school(school_name) when is_binary(school_name) do
     FirstYearRanking
     |> where([r], r.school == ^school_name)
-    |> order_by([asc: :first_year_class])
+    |> order_by(asc: :first_year_class)
     |> Repo.all()
   end
+
   def get_rankings_by_school(_), do: []
 
   @doc """
@@ -164,10 +169,13 @@ defmodule Sevensageassignment.FirstYearRankings do
   def get_latest_ranking_by_school(school_name) when is_binary(school_name) do
     FirstYearRanking
     |> where([r], r.school == ^school_name)
-    |> order_by([desc: :first_year_class]) # Order by year descending
-    |> limit(1)                            # Get only the latest one
-    |> Repo.one()                          # Fetch a single record or nil
+    # Order by year descending
+    |> order_by(desc: :first_year_class)
+    # Get only the latest one
+    |> limit(1)
+    # Fetch a single record or nil
+    |> Repo.one()
   end
-  def get_latest_ranking_by_school(_), do: nil
 
+  def get_latest_ranking_by_school(_), do: nil
 end

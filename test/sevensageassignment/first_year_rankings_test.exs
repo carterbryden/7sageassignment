@@ -8,7 +8,25 @@ defmodule Sevensageassignment.FirstYearRankingsTest do
 
     import Sevensageassignment.FirstYearRankingsFixtures
 
-    @invalid_attrs %{rank: nil, school: nil, first_year_class: nil, l75: nil, l50: nil, l25: nil, g75: nil, g50: nil, g25: nil, gre75v: nil, gre50v: nil, gre25v: nil, gre75q: nil, gre50q: nil, gre25q: nil, gre75w: nil, gre50w: nil}
+    @invalid_attrs %{
+      rank: nil,
+      school: nil,
+      first_year_class: nil,
+      l75: nil,
+      l50: nil,
+      l25: nil,
+      g75: nil,
+      g50: nil,
+      g25: nil,
+      gre75v: nil,
+      gre50v: nil,
+      gre25v: nil,
+      gre75q: nil,
+      gre50q: nil,
+      gre25q: nil,
+      gre75w: nil,
+      gre50w: nil
+    }
 
     test "list_first_year_rankings/0 returns all first_year_rankings" do
       first_year_ranking = first_year_ranking_fixture()
@@ -17,13 +35,35 @@ defmodule Sevensageassignment.FirstYearRankingsTest do
 
     test "get_first_year_ranking!/1 returns the first_year_ranking with given id" do
       first_year_ranking = first_year_ranking_fixture()
-      assert FirstYearRankings.get_first_year_ranking!(first_year_ranking.id) == first_year_ranking
+
+      assert FirstYearRankings.get_first_year_ranking!(first_year_ranking.id) ==
+               first_year_ranking
     end
 
     test "create_first_year_ranking/1 with valid data creates a first_year_ranking" do
-      valid_attrs = %{rank: 42, school: "some school", first_year_class: 42, l75: 42, l50: 42, l25: 42, g75: "120.5", g50: "120.5", g25: "120.5", gre75v: 42, gre50v: 42, gre25v: 42, gre75q: 42, gre50q: 42, gre25q: 42, gre75w: "120.5", gre50w: "120.5"}
+      valid_attrs = %{
+        rank: 42,
+        school: "some school",
+        first_year_class: 42,
+        l75: 42,
+        l50: 42,
+        l25: 42,
+        g75: "120.5",
+        g50: "120.5",
+        g25: "120.5",
+        gre75v: 42,
+        gre50v: 42,
+        gre25v: 42,
+        gre75q: 42,
+        gre50q: 42,
+        gre25q: 42,
+        gre75w: "120.5",
+        gre50w: "120.5"
+      }
 
-      assert {:ok, %FirstYearRanking{} = first_year_ranking} = FirstYearRankings.create_first_year_ranking(valid_attrs)
+      assert {:ok, %FirstYearRanking{} = first_year_ranking} =
+               FirstYearRankings.create_first_year_ranking(valid_attrs)
+
       assert first_year_ranking.rank == 42
       assert first_year_ranking.school == "some school"
       assert first_year_ranking.first_year_class == 42
@@ -44,14 +84,36 @@ defmodule Sevensageassignment.FirstYearRankingsTest do
     end
 
     test "create_first_year_ranking/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = FirstYearRankings.create_first_year_ranking(@invalid_attrs)
+      assert {:error, %Ecto.Changeset{}} =
+               FirstYearRankings.create_first_year_ranking(@invalid_attrs)
     end
 
     test "update_first_year_ranking/2 with valid data updates the first_year_ranking" do
       first_year_ranking = first_year_ranking_fixture()
-      update_attrs = %{rank: 43, school: "some updated school", first_year_class: 43, l75: 43, l50: 43, l25: 43, g75: "456.7", g50: "456.7", g25: "456.7", gre75v: 43, gre50v: 43, gre25v: 43, gre75q: 43, gre50q: 43, gre25q: 43, gre75w: "456.7", gre50w: "456.7"}
 
-      assert {:ok, %FirstYearRanking{} = first_year_ranking} = FirstYearRankings.update_first_year_ranking(first_year_ranking, update_attrs)
+      update_attrs = %{
+        rank: 43,
+        school: "some updated school",
+        first_year_class: 43,
+        l75: 43,
+        l50: 43,
+        l25: 43,
+        g75: "456.7",
+        g50: "456.7",
+        g25: "456.7",
+        gre75v: 43,
+        gre50v: 43,
+        gre25v: 43,
+        gre75q: 43,
+        gre50q: 43,
+        gre25q: 43,
+        gre75w: "456.7",
+        gre50w: "456.7"
+      }
+
+      assert {:ok, %FirstYearRanking{} = first_year_ranking} =
+               FirstYearRankings.update_first_year_ranking(first_year_ranking, update_attrs)
+
       assert first_year_ranking.rank == 43
       assert first_year_ranking.school == "some updated school"
       assert first_year_ranking.first_year_class == 43
@@ -73,14 +135,23 @@ defmodule Sevensageassignment.FirstYearRankingsTest do
 
     test "update_first_year_ranking/2 with invalid data returns error changeset" do
       first_year_ranking = first_year_ranking_fixture()
-      assert {:error, %Ecto.Changeset{}} = FirstYearRankings.update_first_year_ranking(first_year_ranking, @invalid_attrs)
-      assert first_year_ranking == FirstYearRankings.get_first_year_ranking!(first_year_ranking.id)
+
+      assert {:error, %Ecto.Changeset{}} =
+               FirstYearRankings.update_first_year_ranking(first_year_ranking, @invalid_attrs)
+
+      assert first_year_ranking ==
+               FirstYearRankings.get_first_year_ranking!(first_year_ranking.id)
     end
 
     test "delete_first_year_ranking/1 deletes the first_year_ranking" do
       first_year_ranking = first_year_ranking_fixture()
-      assert {:ok, %FirstYearRanking{}} = FirstYearRankings.delete_first_year_ranking(first_year_ranking)
-      assert_raise Ecto.NoResultsError, fn -> FirstYearRankings.get_first_year_ranking!(first_year_ranking.id) end
+
+      assert {:ok, %FirstYearRanking{}} =
+               FirstYearRankings.delete_first_year_ranking(first_year_ranking)
+
+      assert_raise Ecto.NoResultsError, fn ->
+        FirstYearRankings.get_first_year_ranking!(first_year_ranking.id)
+      end
     end
 
     test "change_first_year_ranking/1 returns a first_year_ranking changeset" do

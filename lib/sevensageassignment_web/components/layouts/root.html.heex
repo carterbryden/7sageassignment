@@ -28,6 +28,17 @@
     </script>
   </head>
   <body>
+    <div class="flex justify-end items-center gap-2 p-3">
+      <div id="light-toggle" onclick='window.dispatchEvent(new CustomEvent("phx:set-theme", { detail: { theme: "light" }}));'>
+        <.icon name="hero-sun" class="size-5" />
+      </div>
+      <div id="light-toggle" onclick='window.dispatchEvent(new CustomEvent("phx:set-theme", { detail: { theme: "system" }}));'>
+        <.icon name="hero-computer-desktop" class="size-5" />
+      </div>
+      <div id="light-toggle" onclick='window.dispatchEvent(new CustomEvent("phx:set-theme", { detail: { theme: "dark" }}));'>
+        <.icon name="hero-moon" class="size-5" />
+      </div>
+    </div>
     {@inner_content}
   </body>
 </html>

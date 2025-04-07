@@ -12,7 +12,8 @@ defmodule Sevensageassignment.Application do
       Sevensageassignment.Repo,
       {Ecto.Migrator,
        repos: Application.fetch_env!(:sevensageassignment, :ecto_repos), skip: skip_migrations?()},
-      {DNSCluster, query: Application.get_env(:sevensageassignment, :dns_cluster_query) || :ignore},
+      {DNSCluster,
+       query: Application.get_env(:sevensageassignment, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Sevensageassignment.PubSub},
       # Start a worker by calling: Sevensageassignment.Worker.start_link(arg)
       # {Sevensageassignment.Worker, arg},

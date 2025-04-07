@@ -30,12 +30,28 @@ defmodule Sevensageassignment.FirstYearRankings.Importer do
     file_path
     |> File.stream!()
     |> CSV.parse_stream()
-    |> Stream.drop(1) # Skip the header row
+    # Skip the header row
+    |> Stream.drop(1)
     |> Stream.map(fn row ->
       [
-        rank, school, first_year_class, l75, l50, l25,
-        g75, g50, g25, gre75v, gre50v, gre25v,
-        gre75q, gre50q, gre25q, gre75w, gre50w, gre25w
+        rank,
+        school,
+        first_year_class,
+        l75,
+        l50,
+        l25,
+        g75,
+        g50,
+        g25,
+        gre75v,
+        gre50v,
+        gre25v,
+        gre75q,
+        gre50q,
+        gre25q,
+        gre75w,
+        gre50w,
+        gre25w
       ] = row
 
       now = DateTime.utc_now() |> DateTime.truncate(:second)
@@ -59,11 +75,14 @@ defmodule Sevensageassignment.FirstYearRankings.Importer do
         gre75w: parse_decimal(gre75w),
         gre50w: parse_decimal(gre50w),
         gre25w: parse_decimal(gre25w),
-        inserted_at: now, # timestamps at aren't auto-included on insert_all,
-        updated_at: now   # so we add it in manually here.
+        # timestamps at aren't auto-included on insert_all,
+        inserted_at: now,
+        # so we add it in manually here.
+        updated_at: now
       }
     end)
-    |> Stream.chunk_every(100) # Process in batches of 100
+    # Process in batches of 100
+    |> Stream.chunk_every(100)
     |> Stream.each(fn batch ->
       # insert all but skip any with conflicts
       Repo.insert_all(FirstYearRanking, batch, on_conflict: :nothing)
@@ -72,6 +91,7 @@ defmodule Sevensageassignment.FirstYearRankings.Importer do
   end
 
   defp parse_integer(""), do: nil
+
   defp parse_integer(str) do
     case Integer.parse(str) do
       {num, _} -> num
@@ -80,9 +100,11 @@ defmodule Sevensageassignment.FirstYearRankings.Importer do
   end
 
   defp parse_decimal(""), do: nil
+
   defp parse_decimal(str) do
     case Decimal.parse(str) do
-      {decimal, _remainder} -> decimal  # This returns just the Decimal struct
+      # This returns just the Decimal struct
+      {decimal, _remainder} -> decimal
       :error -> nil
     end
   end
