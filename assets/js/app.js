@@ -1,29 +1,8 @@
-// If you want to use Phoenix channels, run `mix help phx.gen.channel`
-// to get started and then uncomment the line below.
-// import "./user_socket.js"
-
-// You can include dependencies in two ways.
-//
-// The simplest option is to put them in assets/vendor and
-// import them using relative paths:
-//
-//     import "../vendor/some-package.js"
-//
-// Alternatively, you can `npm install some-package --prefix assets` and import
-// them using a path starting with the package name:
-//
-//     import "some-package"
-//
-// If you have dependencies that try to import CSS, esbuild will generate a separate `app.css` file.
-// To load it, simply add a second `<link>` to your `root.html.heex` file.
-
-// Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
 import "phoenix_html";
-// Establish Phoenix Socket and LiveView configuration.
 import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import topbar from "../vendor/topbar";
-import Chart from "chart.js/auto"; // fine for a demo, probably be more selective to save bundle size in production
+import Chart from "chart.js/auto";
 
 const csrfToken = document
   .querySelector("meta[name='csrf-token']")
@@ -31,184 +10,269 @@ const csrfToken = document
 
 let Hooks = {};
 
-// Define the TrendChart Hook
-Hooks.TrendChart = {
-  chart: null, // To hold the chart instance
+// --- Helper to Destroy Chart Safely ---
+function destroyChart(hookInstance) {
+  if (hookInstance.chart) {
+    hookInstance.chart.destroy();
+    hookInstance.chart = null;
+  }
+}
 
+// --- Define the LSAT/GPA TrendChart Hook ---
+Hooks.TrendChart = {
+  chart: null,
   mounted() {
-    console.log("mounted chart");
-    this.handleEvent("update_chart", (payload) => {
-      console.log("Received update_chart event", "Payload:", payload);
-      const dataString = payload.data; // data can be null/undefined to clear chart
+    const chartId = "trendChart";
+    console.log("TrendChart Hook Mounted! ID:", chartId);
+    this.el = document.getElementById(chartId);
+    if (!this.el) {
+      console.error("Canvas element not found:", chartId);
+      return;
+    }
+
+    this.handleEvent("update_trend_chart", (payload) => {
+      console.log("Received update_trend_chart event for ID:", chartId);
+      const dataString = payload.data;
       if (dataString) {
         this.renderChart(dataString);
       } else {
-        this.destroyChart(); // Clear the chart if data is null/undefined
+        destroyChart(this);
       }
     });
-
-    this.renderChart();
   },
-
-  updated() {
-    console.log("Chart html updated");
-    this.renderChart();
-  },
-
-  destroyChart() {
-    if (this.chart) {
-      this.chart.destroy();
-      this.chart = null;
-      console.log("Chart instance destroyed. ID:", this.el.id);
-    }
-  },
-
   destroyed() {
-    if (this.chart) {
-      this.chart.destroy();
-      this.chart = null;
-      console.log("Chart destroyed");
-    }
+    destroyChart(this);
   },
-
   renderChart(chartDataString) {
-    this.destroyChart(); // Always destroy previous instance before rendering
-
+    destroyChart(this);
     if (!chartDataString) {
-      console.log("renderChart called with no data string. ID:", this.el.id);
-      return; // Don't render if no data
+      return;
     }
-
     try {
       const chartData = JSON.parse(chartDataString);
-      if (!this.el || typeof this.el.getContext !== "function") {
-        console.error(
-          "Canvas element not available or invalid. ID:",
-          this.el.id
-        );
+      if (!this.el || !this.el.getContext) {
+        console.error("TrendChart: Invalid canvas.");
         return;
       }
       const ctx = this.el.getContext("2d");
       if (!ctx) {
-        console.error("Failed to get 2D context. ID:", this.el.id);
+        console.error("TrendChart: Failed context.");
         return;
       }
 
-      console.log("Rendering chart - ID:", this.el.id);
-
       this.chart = new Chart(ctx, {
         type: "line",
-        data: chartData, // Use parsed data directly {labels: [...], datasets: [...]}
+        data: chartData,
         options: {
           responsive: true,
-          maintainAspectRatio: false, // Allows chart to fill container height
+          maintainAspectRatio: false,
           animation: false,
-          interaction: {
-            mode: "index", // Show tooltips for all datasets at that index
-            intersect: false,
-          },
-          stacked: false,
-          plugins: {
-            title: {
-              display: false, // Title is already in H3 above canvas
-            },
-            legend: {
-              position: "top",
-            },
-          },
+          interaction: { mode: "index", intersect: false },
+          plugins: { title: { display: false }, legend: { position: "top" } },
           scales: {
             y: {
-              // Primary Y-axis (LSAT)
               type: "linear",
               display: true,
               position: "left",
-              title: {
-                display: true,
-                text: "Median LSAT",
-              },
-              // Suggest min/max based on typical LSAT range
+              title: { display: true, text: "Median LSAT" },
               suggestedMin: 120,
               suggestedMax: 180,
             },
             y1: {
-              // Secondary Y-axis (GPA)
               type: "linear",
               display: true,
               position: "right",
-              title: {
-                display: true,
-                text: "Median GPA",
-              },
-              // Suggest min/max based on typical GPA range
-              suggestedMin: 2.0,
-              sugesstedMax: 4.5,
-              // grid line settings
-              grid: {
-                drawOnChartArea: false, // only want the grid lines for one axis to show up
-              },
+              title: { display: true, text: "Median GPA" },
+              min: 2.0,
+              max: 4.33,
+              grid: { drawOnChartArea: false },
             },
-            x: {
-              // X-axis (Year)
-              title: {
-                display: true,
-                text: "Year",
-              },
-            },
+            x: { title: { display: true, text: "Year" } },
           },
         },
       });
     } catch (e) {
-      console.error(
-        "Failed to parse/render chart - ID:",
-        this.el.id,
-        "Error:",
-        e,
-        "Data:",
-        chartDataString
-      );
-      this.destroyChart(); // Clean up on error
+      console.error("TrendChart Error:", e, chartDataString);
+      destroyChart(this);
     }
   },
 };
 
+// --- Define the RankChart Hook ---
+Hooks.RankChart = {
+  chart: null,
+  mounted() {
+    const chartId = "rankChart";
+
+    this.el = document.getElementById(chartId);
+    if (!this.el) {
+      console.error("Canvas element not found:", chartId);
+      return;
+    }
+
+    this.handleEvent("update_rank_chart", (payload) => {
+      const dataString = payload.data;
+      if (dataString) {
+        this.renderChart(dataString);
+      } else {
+        destroyChart(this);
+      }
+    });
+  },
+  destroyed() {
+    destroyChart(this);
+  },
+  renderChart(chartDataString) {
+    destroyChart(this);
+    if (!chartDataString) {
+      return;
+    }
+    try {
+      const chartData = JSON.parse(chartDataString);
+      if (!this.el || !this.el.getContext) {
+        console.error("RankChart: Invalid canvas.");
+        return;
+      }
+      const ctx = this.el.getContext("2d");
+      if (!ctx) {
+        console.error("RankChart: Failed context.");
+        return;
+      }
+
+      this.chart = new Chart(ctx, {
+        type: "line",
+        data: chartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: { title: { display: false }, legend: { display: false } },
+          scales: {
+            yRank: {
+              type: "linear",
+              display: true,
+              position: "left",
+              reverse: true,
+              title: { display: true, text: "Rank" },
+              min: 1,
+              suggestedMax: 147,
+            },
+            x: { title: { display: true, text: "Year" } },
+          },
+        },
+      });
+    } catch (e) {
+      console.error("RankChart Error:", e, chartDataString);
+      destroyChart(this);
+    }
+  },
+};
+
+// --- Define the GreChart Hook ---
+Hooks.GreChart = {
+  chart: null,
+  mounted() {
+    const chartId = "greChart";
+    this.el = document.getElementById(chartId);
+    if (!this.el) {
+      console.error("Canvas element not found:", chartId);
+      return;
+    }
+
+    this.handleEvent("update_gre_chart", (payload) => {
+      const dataString = payload.data;
+      if (dataString) {
+        this.renderChart(dataString);
+      } else {
+        destroyChart(this);
+      }
+    });
+  },
+  destroyed() {
+    destroyChart(this);
+  },
+  renderChart(chartDataString) {
+    destroyChart(this);
+    if (!chartDataString) {
+      return;
+    }
+    try {
+      const chartData = JSON.parse(chartDataString);
+      if (!this.el || !this.el.getContext) {
+        console.error("GreChart: Invalid canvas.");
+        return;
+      }
+      const ctx = this.el.getContext("2d");
+      if (!ctx) {
+        console.error("GreChart: Failed context.");
+        return;
+      }
+      this.chart = new Chart(ctx, {
+        type: "line",
+        data: chartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            title: { display: false },
+            legend: {
+              position: "top",
+              labels: { boxWidth: 10, font: { size: 10 } },
+            },
+          },
+          scales: {
+            yGreVQ: {
+              type: "linear",
+              display: true,
+              position: "left",
+              title: { display: true, text: "GRE V/Q Score" },
+              suggestedMin: 140,
+              suggestedMax: 175,
+            },
+            yGreW: {
+              type: "linear",
+              display: true,
+              position: "right",
+              title: { display: true, text: "GRE W Score" },
+              min: 0,
+              max: 6,
+              ticks: { stepSize: 0.5 },
+              grid: { drawOnChartArea: false },
+            },
+            x: { title: { display: true, text: "Year" } },
+          },
+        },
+      });
+    } catch (e) {
+      console.error("GreChart Error:", e, chartDataString);
+      destroyChart(this);
+    }
+  },
+};
+
+// --- Initialize LiveSocket ---
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: { _csrf_token: csrfToken },
   hooks: Hooks,
 });
 
-// Show progress bar on live navigation and form submits
+// --- Topbar and Connection ---
 topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" });
 window.addEventListener("phx:page-loading-start", (_info) => topbar.show(300));
 window.addEventListener("phx:page-loading-stop", (_info) => topbar.hide());
-
-// connect if there are any LiveViews on the page
 liveSocket.connect();
-
-// expose liveSocket on window for web console debug logs and latency simulation:
-// >> liveSocket.enableDebug()
-// >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
-// >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket;
 
-// The lines below enable quality of life phoenix_live_reload
-// development features:
-//
-//     1. stream server logs to the browser console
-//     2. click on elements to jump to their definitions in your code editor
-//
+// --- Live Reload ---
 if (process.env.NODE_ENV === "development") {
   window.addEventListener(
     "phx:live_reload:attached",
     ({ detail: reloader }) => {
-      // Enable server log streaming to client.
-      // Disable with reloader.disableServerLogs()
       reloader.enableServerLogs();
-
-      // Open configured PLUG_EDITOR at file:line of the clicked element's HEEx component
-      //
-      //   * click with "c" key pressed to open at caller location
-      //   * click with "d" key pressed to open at function component definition location
       let keyDown;
       window.addEventListener("keydown", (e) => (keyDown = e.key));
       window.addEventListener("keyup", (e) => (keyDown = null));
@@ -227,7 +291,6 @@ if (process.env.NODE_ENV === "development") {
         },
         true
       );
-
       window.liveReloader = reloader;
     }
   );
